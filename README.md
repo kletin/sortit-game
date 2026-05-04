@@ -22,4 +22,8 @@ Download or clone the repository and open `index.html` in any modern web browser
 The game was developed for an academic assignment in Informatics Education and is based on the theory of sorting algorithms taught in upper secondary education.
 
 ## Author / Team
-- τα ονόματά σας εδώ
+•	Σωτηρία Κενανίδου iis23162
+•	Λουκία Κωνσταντίνου ics23164
+•	Δήμητρα Λιάκου iis23114
+•	Καλλιόπη Μαρία Τιντικάκη ics23088
+
