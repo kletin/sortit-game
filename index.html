@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sort It! — Αλγόριθμοι Ταξινόμησης</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #071830;
+      --panel:    rgba(12, 40, 80, 0.80);
+      --border:   rgba(0, 210, 255, 0.25);
+      --cyan:     #00d8ff;
+      --cyan2:    #00aad4;
+      --teal:     #00f0cc;
+      --blue:     #3b8eff;
+      --ok:       #00f0a8;
+      --err:      #ff4d6d;
+      --warn:     #ffd166;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: #0a2040;
+      min-height: 100vh;
+      color: #e8f6ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% 20%, rgba(0,130,255,0.22) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 80%, rgba(0,220,200,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 50% 50%, rgba(0,80,180,0.25) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+      animation: gridDrift 30s linear infinite;
+    }
+
+    @keyframes gridDrift {
+      from { transform: translateY(0); }
+      to   { transform: translateY(48px); }
+    }
+
+    /* ── Orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+    .orb-1 { width: 300px; height: 300px; background: rgba(0,150,255,0.07); top: -80px; left: -80px; animation-delay: 0s; }
+    .orb-2 { width: 200px; height: 200px; background: rgba(0,220,180,0.06); bottom: 100px; right: -60px; animation-delay: -5s; }
+    .orb-3 { width: 150px; height: 150px; background: rgba(0,100,255,0.08); top: 50%; left: 50%; animation-delay: -9s; }
+
+    @keyframes orbFloat {
+      0%,100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-30px) scale(1.05); }
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      padding: 22px 24px 18px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(4, 13, 26, 0.8);
+      backdrop-filter: blur(16px);
+    }
+
+    .header-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--cyan), var(--teal));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 0 20px rgba(0,200,255,0.4);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, var(--cyan), #5de0ff, var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: titleShimmer 4s ease-in-out infinite;
+      background-size: 200%;
+    }
+
+    @keyframes titleShimmer {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+
+    header p { color: rgba(180,220,255,0.4); font-size: 0.85rem; margin-top: 2px; letter-spacing: 0.5px; }
+
+    /* ── Main layout ── */
+    .game-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 880px;
+      padding: 24px 16px 60px;
+    }
+
+    /* ── Level tabs ── */
+    .level-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .level-tab {
+      flex: 1;
+      padding: 12px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,200,255,0.1);
+      background: rgba(8,25,55,0.6);
+      backdrop-filter: blur(8px);
+      color: rgba(180,220,255,0.4);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .level-tab::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,200,255,0.08), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .level-tab:hover::before { opacity: 1; }
+    .level-tab:hover { border-color: rgba(0,200,255,0.25); color: rgba(220,240,255,0.7); }
+
+    .level-tab.active {
+      border-color: rgba(0,200,255,0.5);
+      background: rgba(0,100,180,0.2);
+      color: #e0f4ff;
+      box-shadow: 0 0 20px rgba(0,200,255,0.15), inset 0 1px 0 rgba(0,200,255,0.2);
+    }
+    .level-tab.active::before { opacity: 1; }
+
+    .level-tab.locked { cursor: not-allowed; opacity: 0.3; }
+
+    .tab-name { font-size: 0.95rem; font-weight: 600; }
+    .tab-algo { font-size: 0.72rem; color: var(--cyan); margin-top: 2px; opacity: 0.7; }
+    .tab-stars { font-size: 0.8rem; margin-top: 4px; letter-spacing: 3px; }
+    .level-tab.active .tab-algo { opacity: 1; }
+
+    /* ── Stats ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 12px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0.4;
+    }
+
+    .stat-icon { font-size: 1.1rem; margin-bottom: 4px; }
+    .stat-label { font-size: 0.65rem; color: rgba(160,200,240,0.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+    .stat-card.danger .stat-value { color: var(--err); }
+
+    /* ── Progress ── */
+    .progress-wrap {
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .progress-label { font-size: 0.7rem; color: rgba(160,200,240,0.4); white-space: nowrap; }
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(0,200,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid rgba(0,200,255,0.1);
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan2), var(--cyan), var(--teal));
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 0 8px rgba(0,200,255,0.5);
+    }
+    .progress-pct { font-size: 0.7rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; min-width: 32px; text-align: right; }
+
+    /* ── Two-column layout ── */
+    .game-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 680px) {
+      .game-body { grid-template-columns: 1fr; }
+      .side-panel { display: none; }
+    }
+
+    /* ── Side panel (algo info + pseudocode) ── */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .panel-title {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .panel-title::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--cyan);
+    }
+
+    .algo-desc {
+      font-size: 0.83rem;
+      line-height: 1.7;
+      color: rgba(200,230,255,0.75);
+    }
+    .algo-desc strong { color: #7dd3fc; }
+    .algo-desc em { color: var(--teal); font-style: normal; }
+
+    .pseudocode {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 2;
+      color: rgba(160,210,255,0.55);
+    }
+    .pseudocode .hl { color: var(--warn); font-weight: 600; }
+
+    /* ── Main play area ── */
+    .play-area { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── Instruction ── */
+    .instruction {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-size: 0.96rem;
+      line-height: 1.55;
+      color: rgba(220,240,255,0.9);
+      backdrop-filter: blur(10px);
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: left;
+      text-wrap: pretty;
+      position: relative;
+    }
+
+    .instruction::before {
+      content: 'Οδηγία';
+      position: absolute;
+      top: -10px;
+      left: 16px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(4, 20, 50, 0.95);
+      border: 1px solid rgba(0, 210, 255, 0.2);
+      color: var(--cyan);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+
+    /* ── Bars area ── */
+    .bars-area {
+      background: rgba(4, 15, 35, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      height: 290px;
+      padding: 50px 20px 18px;
+      backdrop-filter: blur(8px);
+      position: relative;
+      overflow: visible;
+    }
+
+    .bars-area::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0.3;
+    }
+
+    .bar-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.15s;
+    }
+
+    .bar-wrapper:hover { transform: translateY(-3px); }
+    .bar-wrapper:hover .bar { filter: brightness(1.25); }
+
+    .bar {
+      width: 58px;
+      border-radius: 8px 8px 0 0;
+      transition: height 0.35s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s, filter 0.2s;
+      position: relative;
+    }
+
+    .bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 8px; right: 8px;
+      height: 4px;
+      background: rgba(255,255,255,0.35);
+      border-radius: 4px;
+    }
+
+    .bar-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.35);
+      border-radius: 6px;
+      padding: 2px 7px;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 2;
+    }
+
+    .bar-idx {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: rgba(160,200,255,0.45);
+    }
+
+    /* Sorted (final position) */
+    .bar-wrapper.sorted-fin {
+      position: relative;
+    }
+    .bar-wrapper.sorted-fin .bar {
+      box-shadow: 0 0 12px rgba(0,240,160,0.3) !important;
+      filter: brightness(0.7) saturate(0.5);
+      border-bottom: 2px solid rgba(0,240,160,0.4);
+    }
+    .bar-wrapper.sorted-fin .bar-num {
+      background: rgba(0,160,100,0.3);
+      color: rgba(0,240,160,0.8);
+    }
+
+    /* Bar states */
+    .bar-wrapper.selected .bar {
+      box-shadow: 0 0 0 2px var(--warn), 0 0 20px rgba(255,209,102,0.6);
+      filter: brightness(1.2);
+    }
+    .bar-wrapper.comparing .bar {
+      box-shadow: 0 0 0 2px rgba(255,209,102,0.5), 0 0 14px rgba(255,209,102,0.4);
+    }
+    .bar-wrapper.flash-correct .bar {
+      box-shadow: 0 0 0 2px var(--ok), 0 0 24px rgba(0,229,160,0.7);
+      filter: brightness(1.3);
+    }
+    .bar-wrapper.flash-wrong .bar {
+      animation: shake 0.4s ease;
+      filter: brightness(0.5) saturate(0.3);
+    }
+    .bar-wrapper.done .bar {
+      opacity: 0.35;
+      filter: brightness(0.5) saturate(0.4);
+    }
+
+    /* Insertion Sort key indicator */
+    .bar-key-label {
+      position: absolute;
+      top: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,180,50,0.92);
+      color: #1a1a2e;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.62rem;
+      font-weight: 700;
+      border-radius: 5px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 5;
+      box-shadow: 0 2px 8px rgba(255,180,50,0.5);
+    }
+    .bar-key-label::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(255,180,50,0.92);
+    }
+    .bar-wrapper.ins-key {
+      position: relative;
+    }
+    .bar-wrapper.ins-key .bar {
+      box-shadow: 0 0 0 2px rgba(255,180,50,0.9), 0 0 22px rgba(255,180,50,0.5);
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-8px); }
+      40%      { transform: translateX(8px); }
+      60%      { transform: translateX(-5px); }
+      80%      { transform: translateX(5px); }
+    }
+
+    /* ── Action buttons ── */
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      min-height: 52px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: 'Space Grotesk', sans-serif;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+      letter-spacing: 0.3px;
+    }
+    .btn:hover  { transform: translateY(-2px); filter: brightness(1.1); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-swap {
+      background: linear-gradient(135deg, #0077cc, #00aaff);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(0,150,255,0.35);
+      border: 1px solid rgba(0,200,255,0.3);
+    }
+
+    .btn-keep {
+      background: rgba(255,255,255,0.06);
+      color: rgba(200,230,255,0.85);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .btn-keep:hover { background: rgba(255,255,255,0.1); }
+
+    .btn-hint {
+      background: rgba(255,209,102,0.1);
+      color: var(--warn);
+      border: 1px solid rgba(255,209,102,0.25);
+      font-size: 0.82rem;
+      padding: 10px 16px;
+    }
+
+    .btn-new {
+      background: linear-gradient(135deg, #0077cc, #00aaff);
+      color: #fff;
+      padding: 14px 36px;
+      font-size: 1rem;
+      box-shadow: 0 4px 20px rgba(0,150,255,0.4);
+      border: 1px solid rgba(0,200,255,0.3);
+    }
+
+    /* ── Feedback ── */
+    .feedback {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.92rem;
+      text-align: center;
+      border-radius: 10px;
+      padding: 0 12px;
+      transition: all 0.2s;
+    }
+    .feedback.ok   { color: var(--ok);   text-shadow: 0 0 12px rgba(0,229,160,0.4); }
+    .feedback.err  { color: var(--err);  text-shadow: 0 0 12px rgba(255,77,109,0.4); }
+    .feedback.info { color: var(--warn); text-shadow: 0 0 12px rgba(255,209,102,0.4); }
+
+    /* ── Victory ── */
+    .victory-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 48px 32px;
+      background: rgba(4,20,50,0.9);
+      border: 1px solid rgba(0,200,255,0.3);
+      border-radius: 24px;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 0 60px rgba(0,150,255,0.15);
+    }
+    .victory-screen.show { display: flex; }
+
+    .victory-emoji { font-size: 4rem; animation: popIn 0.5s cubic-bezier(0.4,0,0.2,1); }
+    @keyframes popIn {
+      from { transform: scale(0.3); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .victory-title {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--cyan), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .victory-stars { font-size: 2.2rem; letter-spacing: 8px; }
+    .victory-score { font-size: 1rem; color: rgba(180,220,255,0.6); }
+    .victory-score span { color: var(--cyan); font-weight: 700; font-size: 1.2rem; }
+
+    .victory-stats {
+      display: flex;
+      gap: 20px;
+      background: rgba(0,200,255,0.06);
+      border: 1px solid rgba(0,200,255,0.15);
+      border-radius: 14px;
+      padding: 14px 28px;
+    }
+    .vstat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .vstat-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--teal);
+    }
+    .vstat-lbl {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(160,210,255,0.5);
+    }
+
+    /* ── Divider line ── */
+    .neon-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 4px 0;
+    }
+
+    /* ── Splash screen ── */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: #071830;
+      overflow-y: auto;
+    }
+
+    .splash-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      max-width: 700px;
+      width: 100%;
+      text-align: center;
+      animation: fadeUp 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .splash-logo {
+      font-size: 4.5rem;
+      filter: drop-shadow(0 0 24px rgba(0,210,255,0.5));
+      animation: floatLogo 3s ease-in-out infinite;
+    }
+    @keyframes floatLogo {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+
+    .splash-title {
+      font-size: 3.5rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      background: linear-gradient(90deg, var(--cyan), #5de0ff, var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      background-size: 200%;
+      animation: titleShimmer 4s ease-in-out infinite;
+      line-height: 1;
+    }
+
+    .splash-sub {
+      font-size: 1.1rem;
+      color: rgba(180,220,255,0.55);
+      margin-top: -16px;
+      letter-spacing: 0.3px;
+    }
+
+    .splash-levels {
+      display: flex;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .splash-level-card {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 12px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .splash-level-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0.5;
+    }
+    .splash-level-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,210,255,0.4);
+    }
+
+    .slc-icon  { font-size: 2rem; margin-bottom: 8px; }
+    .slc-name  { font-size: 0.95rem; font-weight: 700; color: #e0f4ff; margin-bottom: 4px; }
+    .slc-desc  { font-size: 0.75rem; color: rgba(160,210,255,0.5); line-height: 1.5; margin-bottom: 10px; }
+    .slc-tag   {
+      display: inline-block;
+      background: rgba(0,210,255,0.1);
+      border: 1px solid rgba(0,210,255,0.2);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.7rem;
+      color: var(--cyan);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .splash-how {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 28px;
+      width: 100%;
+      backdrop-filter: blur(10px);
+    }
+    .splash-how-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      margin-bottom: 14px;
+    }
+    .splash-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: left;
+    }
+    .splash-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.92rem;
+      color: rgba(200,230,255,0.8);
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0,210,255,0.15);
+      border: 1px solid rgba(0,210,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--cyan);
+      flex-shrink: 0;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #0077cc, #00aaff);
+      color: #fff;
+      padding: 16px 52px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 14px;
+      border: 1px solid rgba(0,200,255,0.4);
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(0,150,255,0.4);
+      transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+      font-family: 'Space Grotesk', sans-serif;
+      letter-spacing: 0.5px;
+    }
+    .btn-start:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 0 45px rgba(0,150,255,0.6);
+      filter: brightness(1.1);
+    }
+
+    .splash-goal {
+      background: rgba(0,240,180,0.08);
+      border: 1px solid rgba(0,240,180,0.25);
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-size: 0.92rem;
+      color: rgba(200,240,255,0.8);
+      width: 100%;
+    }
+    .splash-goal strong { color: var(--teal); }
+
+    .splash-footer {
+      font-size: 0.72rem;
+      color: rgba(140,180,220,0.3);
+      letter-spacing: 0.5px;
+    }
+
+    #splash.hidden {
+      animation: fadeOut 0.4s ease forwards;
+      pointer-events: none;
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: scale(0.97); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 540px) {
+      .bar { width: 44px; }
+      header h1 { font-size: 1.5rem; }
+      .stat-value { font-size: 1.2rem; }
+      .stats { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- ── SPLASH SCREEN ── -->
+<div id="splash">
+  <div class="splash-inner">
+    <div class="splash-logo">🔢</div>
+    <h1 class="splash-title">Sort It!</h1>
+    <p class="splash-sub">Μάθε αλγορίθμους ταξινόμησης παίζοντας</p>
+
+    <div class="splash-levels">
+      <div class="splash-level-card">
+        <div class="slc-icon">🫧</div>
+        <div class="slc-name">Bubble Sort</div>
+        <div class="slc-desc">Σύγκριση γειτονικών στοιχείων</div>
+        <div class="slc-tag">§3.7.1</div>
+      </div>
+      <div class="splash-level-card">
+        <div class="slc-icon">📥</div>
+        <div class="slc-name">Insertion Sort</div>
+        <div class="slc-desc">Εισαγωγή στη σωστή θέση</div>
+        <div class="slc-tag">§3.7.3</div>
+      </div>
+      <div class="splash-level-card">
+        <div class="slc-icon">🎯</div>
+        <div class="slc-name">Selection Sort</div>
+        <div class="slc-desc">Εύρεση μικρότερου στοιχείου κάθε φορά</div>
+        <div class="slc-tag">§3.7.2</div>
+      </div>
+    </div>
+
+    <div class="splash-how">
+      <div class="splash-how-title">Πώς παίζεται</div>
+      <div class="splash-steps">
+        <div class="splash-step"><span class="step-num">1</span> Διάβασε την οδηγία και κλίκαρε τα στοιχεία που ζητά</div>
+        <div class="splash-step"><span class="step-num">2</span> Αποφάσισε αν χρειάζεται αντιμετάθεση ή κράτηση</div>
+        <div class="splash-step"><span class="step-num">3</span> Όσο λιγότερα λάθη, τόσα περισσότερα αστέρια ⭐</div>
+      </div>
+    </div>
+
+    <div class="splash-goal">🎯 Στόχος: Ταξινόμησε τα στοιχεία σε <strong>αύξουσα σειρά</strong> (μικρότερο → μεγαλύτερο)</div>
+
+    <button class="btn btn-start" onclick="hideSplash()">▶ Έναρξη Παιχνιδιού</button>
+
+    <div class="splash-footer">ΑΕΠΠ · Γ΄ Λυκείου · Κεφ. 3.7 — Αλγόριθμοι Ταξινόμησης</div>
+  </div>
+</div>
+
+<!-- Header -->
+<header id="main-header" style="display:none">
+  <div class="header-logo">
+    <div class="logo-icon">🔢</div>
+    <h1>Sort It!</h1>
+  </div>
+  <p>Μάθε αλγορίθμους ταξινόμησης βήμα-βήμα · ΑΕΠΠ Γ΄ Λυκείου · §3.7</p>
+</header>
+
+<div class="game-container" id="main-game" style="display:none">
+
+  <!-- Level tabs -->
+  <div class="level-tabs">
+    <div class="level-tab active" id="tab-0" onclick="selectLevel(0)">
+      <div class="tab-name">Bubble Sort</div>
+      <div class="tab-algo">Ταξινόμηση Φυσαλίδας</div>
+      <div class="tab-stars" id="stars-0">☆☆☆</div>
+    </div>
+    <div class="level-tab" id="tab-1" onclick="selectLevel(1)">
+      <div class="tab-name">Insertion Sort</div>
+      <div class="tab-algo">Ευθεία Εισαγωγή</div>
+      <div class="tab-stars" id="stars-1">☆☆☆</div>
+    </div>
+    <div class="level-tab" id="tab-2" onclick="selectLevel(2)">
+      <div class="tab-name">Selection Sort</div>
+      <div class="tab-algo">Ταξινόμηση Επιλογής</div>
+      <div class="tab-stars" id="stars-2">☆☆☆</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-label">Βαθμολογία</div>
+      <div class="stat-value" id="score">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔁</div>
+      <div class="stat-label">Γύρος</div>
+      <div class="stat-value" id="pass-disp">1</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">👣</div>
+      <div class="stat-label">Βήμα</div>
+      <div class="stat-value" id="step-disp">—</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-icon">❌</div>
+      <div class="stat-label">Λάθη</div>
+      <div class="stat-value" id="errors-disp">0</div>
+    </div>
+  </div>
+
+  <!-- Goal badge -->
+  <div style="text-align:center;margin-bottom:10px;">
+    <span style="background:rgba(0,240,180,0.08);border:1px solid rgba(0,240,180,0.25);border-radius:20px;padding:5px 16px;font-size:0.78rem;color:rgba(0,240,180,0.8);">
+      🎯 Στόχος: ταξινόμηση σε <strong>αύξουσα σειρά</strong> (μικρό → μεγάλο)
+    </span>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <span class="progress-label">Πρόοδος</span>
+    <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+    <span class="progress-pct" id="prog-pct">0%</span>
+  </div>
+
+  <!-- Main body -->
+  <div class="game-body">
+
+    <!-- Left: play area -->
+    <div class="play-area">
+      <div class="instruction" id="instruction">Φόρτωση...</div>
+      <div class="bars-area" id="bars-area"></div>
+      <div class="action-buttons" id="action-btns"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <!-- Right: info panel -->
+    <div class="side-panel">
+      <div class="panel-card">
+        <div class="panel-title">Αλγόριθμος</div>
+        <div class="algo-desc" id="algo-info"></div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-title">Ψευδοκώδικας</div>
+        <div class="pseudocode" id="pseudocode"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Victory -->
+  <div class="victory-screen" id="victory">
+    <div class="victory-emoji">🎉</div>
+    <div class="victory-title">Συγχαρητήρια!</div>
+    <div class="victory-stars" id="v-stars"></div>
+    <div class="victory-score" id="v-score"></div>
+    <div class="victory-stats" id="v-stats"></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-new" onclick="restartLevel()">↺ Παίξε Ξανά</button>
+      <button class="btn btn-hint" id="v-next" onclick="goNextLevel()" style="display:none">Επόμενο επίπεδο →</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  LEVELS DEFINITION
+// ─────────────────────────────────────────────
+const LEVELS = [
+  {
+    name: 'Bubble Sort',
+    size: 5,
+    algo: 'bubble',
+    info: '<strong>Bubble Sort:</strong> Σε κάθε γύρο ξεκινάς από τα δεξιά και πηγαίνεις προς τα αριστερά. Συγκρίνεις κάθε φορά <em>δύο γειτονικά</em> στοιχεία. Αν το δεξί είναι μικρότερο, κάνεις αντιμετάθεση. Στο τέλος του γύρου, το μικρότερο στοιχείο πηγαίνει στη σωστή θέση αριστερά.',
+    pseudo: [
+      'για i = 0 έως n-2:',
+      '  για j = n-1 έως i+1:',
+      '    <span class="hl">αν arr[j] &lt; arr[j-1]:</span>',
+      '      <span class="hl">αντιμετάθεση arr[j-1], arr[j]</span>',
+    ]
+  },
+  {
+    name: 'Insertion Sort',
+    size: 5,
+    algo: 'insertion',
+    info: '<strong>Insertion Sort (Ταξινόμηση Ευθείας Εισαγωγής):</strong> Σε κάθε γύρο επιλέγεται ένα στοιχείο — το <em>κλειδί</em> (↓). Το κλειδί συγκρίνεται με το στοιχείο αμέσως αριστερά του. Αν το αριστερό είναι <em>μεγαλύτερο</em>, κάνεις αντιμετάθεση και ξανασυγκρίνεις με το επόμενο αριστερά. Μόλις το αριστερό είναι <em>μικρότερο ή ίσο</em>, το κλειδί βρήκε τη θέση του — κράτηση.',
+    pseudo: [
+      'για i = 1 έως n-1:',
+      '  <span class="hl">key = arr[i]</span>',
+      '  j = i - 1',
+      '  ενώ j &gt;= 0 και arr[j] &gt; arr[j+1]:',
+      '    <span class="hl">αντιμετάθεση arr[j], arr[j+1]</span>',
+      '    <span class="hl">j = j - 1</span>',
+    ]
+  },
+  {
+    name: 'Selection Sort',
+    size: 5,
+    algo: 'selection',
+    info: '<strong>Selection Sort (Ταξινόμηση Επιλογής):</strong> Σε κάθε γύρο σαρώνεις τα αταξινόμητα στοιχεία ένα-ένα και βρίσκεις το <em>μικρότερο</em>. Μόλις το βρεις, το βάζεις στη σωστή θέση με <em>ακριβώς μία αντιμετάθεση</em> ανά γύρο.',
+    pseudo: [
+      'για i = 0 έως n-2:',
+      '  <span class="hl">min_idx = i // θέση μικρότερου στοιχείου</span>',
+      '  για j = i+1 έως n-1:',
+      '    <span class="hl">αν arr[j] &lt; arr[min_idx]: min_idx = j</span>',
+      '  <span class="hl">αντιμετάθεση arr[i], arr[min_idx]</span>',
+    ]
+  },
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let currentLevel = 0;
+let levelStars    = [0, 0, 0];
+let levelUnlocked = [true, true, true];
+
+let arr         = [];
+let score       = 0;
+let errors      = 0;
+let phase       = 'select';
+let comparisons = 0;
+let swaps       = 0;
+
+// Bubble Sort: first selected bar index
+let sel   = -1;
+
+// Bubble Sort state
+let bPass = 0;
+let bJ    = 0;
+let totalSteps = 0;
+let doneSteps  = 0;
+
+// Selection Sort state
+let sPass    = 0;
+let sJ       = 0;
+let sMinIdx  = 0;
+let sScanDone= false;
+
+// Insertion Sort state
+let insPass = 1;
+let insJ    = 0;
+
+// Bar colors (value 1–8)
+const COLORS = ['#ef4444','#f97316','#eab308','#84cc16',
+                '#22c55e','#06b6d4','#3b82f6','#8b5cf6'];
+
+// ─────────────────────────────────────────────
+//  UTILITIES
+// ─────────────────────────────────────────────
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function isSorted(a) {
+  for (let i = 0; i < a.length - 1; i++) if (a[i] > a[i+1]) return false;
+  return true;
+}
+function makeArray(n) {
+  const a = Array.from({length: n}, (_, i) => i + 1);
+  shuffle(a);
+  if (isSorted(a)) { [a[0], a[1]] = [a[1], a[0]]; }
+  return a;
+}
+function colorFor(val) {
+  return COLORS[Math.min(val - 1, COLORS.length - 1)];
+}
+function qs(id) { return document.getElementById(id); }
+function setErrors(nextErrors) {
+  errors = nextErrors;
+  qs('errors-disp').textContent = errors;
+}
+function addError(delta = 1) {
+  setErrors(errors + delta);
+}
+function clearActions() {
+  qs('action-btns').innerHTML = '';
+}
+function getInsertionKeyIndex() {
+  if (insPass >= arr.length) return arr.length - 1;
+  return Math.min(insPass, insJ + 1);
+}
+function getInsertionHighlights(extra = {}) {
+  const keyIdx = getInsertionKeyIndex();
+  const comparing = insJ >= 0 ? [insJ, insJ + 1] : [];
+  return {
+    selected: keyIdx >= 0 ? [keyIdx] : [],
+    comparing,
+    ...extra,
+  };
+}
+
+// ─────────────────────────────────────────────
+//  LEVEL MANAGEMENT
+// ─────────────────────────────────────────────
+function selectLevel(idx) {
+  if (!levelUnlocked[idx]) return;
+  currentLevel = idx;
+  document.querySelectorAll('.level-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+  startGame();
+}
+
+function goNextLevel() {
+  if (currentLevel + 1 < LEVELS.length) selectLevel(currentLevel + 1);
+}
+
+// ─────────────────────────────────────────────
+//  GAME INIT
+// ─────────────────────────────────────────────
+function startGame() {
+  const lv = LEVELS[currentLevel];
+  arr         = makeArray(lv.size);
+  score       = 0;
+  errors      = 0;
+  phase       = 'select';
+  sel         = -1;
+  comparisons = 0;
+  swaps       = 0;
+
+  if (lv.algo === 'bubble') {
+    bPass = 0; bJ = arr.length - 1;
+    totalSteps = 0;
+    for (let i = 0; i < arr.length - 1; i++) totalSteps += arr.length - 1 - i;
+    doneSteps = 0;
+  } else if (lv.algo === 'selection') {
+    sPass = 0; sJ = 1; sMinIdx = 0; sScanDone = false;
+    totalSteps = arr.length - 1;
+    doneSteps  = 0;
+  } else {
+    insPass = 1; insJ = insPass - 1;
+    totalSteps = arr.length - 1;
+    doneSteps  = 0;
+  }
+
+  qs('victory').classList.remove('show');
+  qs('algo-info').innerHTML   = lv.info;
+  qs('pseudocode').innerHTML  = lv.pseudo.join('<br>');
+  qs('feedback').textContent  = '';
+  qs('feedback').className    = 'feedback';
+  clearActions();
+
+  refreshStats();
+  renderBars(lv.algo === 'insertion' ? getInsertionHighlights() : {});
+  setInstruction(lv.algo === 'bubble'
+    ? `Γύρος 1: Ξεκίνα από τα δεξιά — κλίκαρε τα στοιχεία <strong>${arr[arr.length - 2]}</strong> και <strong>${arr[arr.length - 1]}</strong>.`
+    : lv.algo === 'selection'
+      ? selectionInstruction()
+      : insertionInstruction()
+  );
+}
+
+function restartLevel() { startGame(); }
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function renderBars(hl) {
+  const area = qs('bars-area');
+  area.innerHTML = '';
+  const maxVal = Math.max(...arr);
+  const maxH   = 220;
+
+  arr.forEach((val, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bar-wrapper';
+
+    if (hl.selected  && hl.selected.includes(idx))  wrap.classList.add('selected');
+    if (hl.comparing && hl.comparing.includes(idx))  wrap.classList.add('comparing');
+    if (hl.correct   && hl.correct.includes(idx))    wrap.classList.add('flash-correct');
+    if (hl.wrong     && hl.wrong.includes(idx))      wrap.classList.add('flash-wrong');
+    if (hl.done      && hl.done.includes(idx))       wrap.classList.add('done');
+    const sortedIdx = getSortedIndices();
+    if (sortedIdx.includes(idx) && !hl.correct?.includes(idx)) wrap.classList.add('sorted-fin');
+
+    const h = Math.round((val / maxVal) * maxH) + 24;
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = h + 'px';
+    bar.style.background =
+      `linear-gradient(180deg, ${colorFor(val)}, ${colorFor(val)}99)`;
+    bar.style.boxShadow = `0 4px 18px ${colorFor(val)}44`;
+
+    const num = document.createElement('div');
+    num.className   = 'bar-num';
+    num.textContent = val;
+    bar.appendChild(num);
+
+    const idxlbl = document.createElement('div');
+    idxlbl.className   = 'bar-idx';
+    idxlbl.textContent = '[' + idx + ']';
+
+    // Insertion Sort: mark the active key element (follows element as it shifts left)
+    const lv = LEVELS[currentLevel];
+    if (lv && lv.algo === 'insertion' && idx === getInsertionKeyIndex() && phase !== 'done') {
+      wrap.classList.add('ins-key');
+      const keyLbl = document.createElement('div');
+      keyLbl.className   = 'bar-key-label';
+      keyLbl.textContent = 'κλειδί';
+      bar.appendChild(keyLbl);
+    }
+
+    wrap.appendChild(bar);
+    wrap.appendChild(idxlbl);
+
+    if (phase !== 'done') wrap.addEventListener('click', () => handleClick(idx));
+    area.appendChild(wrap);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  UI HELPERS
+// ─────────────────────────────────────────────
+function refreshStats() {
+  const lv = LEVELS[currentLevel];
+  qs('score').textContent  = score;
+  qs('errors-disp').textContent = errors;
+
+  if (lv.algo === 'bubble') {
+    qs('pass-disp').textContent = bPass + 1;
+    const stepsInPass = arr.length - 1 - bPass;
+    qs('step-disp').textContent = (arr.length - bJ) + ' / ' + stepsInPass;
+  } else if (lv.algo === 'selection') {
+    qs('pass-disp').textContent = sPass + 1;
+    qs('step-disp').textContent = sScanDone ? 'αντιμετάθεση' : sJ + ' / ' + (arr.length - 1);
+  } else {
+    qs('pass-disp').textContent = insPass;
+    qs('step-disp').textContent = insJ >= 0 ? (insPass - insJ) : 'αρχή';
+  }
+
+  const pct = totalSteps > 0 ? Math.round((doneSteps / totalSteps) * 100) : 0;
+  qs('prog').style.width = pct + '%';
+  qs('prog-pct').textContent = pct + '%';
+}
+
+function setInstruction(text) { qs('instruction').innerHTML = text; }
+
+function feedback(msg, type) {
+  const el = qs('feedback');
+  el.innerHTML = msg;
+  el.className = 'feedback ' + type;
+}
+
+function addScore(delta) {
+  score = Math.max(0, score + delta);
+  qs('score').textContent = score;
+}
+
+function doneHighlight() { return arr.map((_, i) => i); }
+
+function getSortedIndices() {
+  const lv = LEVELS[currentLevel];
+  const n = arr.length;
+  if (phase === 'done') return arr.map((_, i) => i);
+  if (lv.algo === 'bubble') {
+    // first bPass elements are sorted
+    const result = [];
+    for (let i = 0; i < bPass; i++) result.push(i);
+    return result;
+  } else if (lv.algo === 'selection') {
+    // first sPass elements are sorted
+    const result = [];
+    for (let i = 0; i < sPass; i++) result.push(i);
+    return result;
+  } else {
+    // In insertion sort, only the prefix before the current key position is guaranteed sorted.
+    const result = [];
+    const limit = phase === 'done' ? insPass : Math.max(0, getInsertionKeyIndex() - 1);
+    for (let i = 0; i < limit; i++) result.push(i);
+    return result;
+  }
+}
+
+// ─────────────────────────────────────────────
+//  CLICK ROUTER
+// ─────────────────────────────────────────────
+function handleClick(idx) {
+  const lv = LEVELS[currentLevel];
+  if (lv.algo === 'bubble')         handleBubbleClick(idx);
+  else if (lv.algo === 'selection') handleSelectionClick(idx);
+  else                              handleInsertionClick(idx);
+}
+
+// ─────────────────────────────────────────────
+//  BUBBLE SORT LOGIC
+// ─────────────────────────────────────────────
+function handleBubbleClick(idx) {
+  if (phase === 'decide') return;
+
+  if (sel === -1) {
+    sel = idx;
+    renderBars({ selected: [idx] });
+    setInstruction(`Επίλεξε το δεύτερο στοιχείο για σύγκριση με το ${arr[idx]}.`);
+    return;
+  }
+
+  if (sel === idx) {
+    sel = -1;
+    renderBars({});
+    setInstruction('Κλίκαρε τα δύο στοιχεία που συγκρίνονται τώρα.');
+    return;
+  }
+
+  const lo = Math.min(sel, idx);
+  const hi = Math.max(sel, idx);
+  sel = -1;
+
+  if (hi - lo !== 1) {
+    feedback(`✗ Λάθος! Ο Bubble Sort συγκρίνει μόνο <strong>γειτονικά</strong> στοιχεία. Τα [${lo}] και [${hi}] δεν είναι σωστό ζευγάρι. &nbsp;−5`, 'err');
+    addScore(-5); addError();
+    renderBars({ wrong: [lo, hi] });
+    setTimeout(() => { renderBars({}); setInstruction('Ξεκίνα πάντα από τα δεξιά — κλίκαρε δύο <strong>γειτονικά</strong> στοιχεία.'); }, 1400);
+    return;
+  }
+
+  if (lo !== bJ - 1) {
+    feedback(`✗ Λάθος ζευγάρι! Τώρα πρέπει να συγκρίνεις τα ${arr[bJ-1]} και ${arr[bJ]}. &nbsp;−10`, 'err');
+    addScore(-10); addError();
+    renderBars({ wrong: [lo, hi] });
+    setTimeout(() => { renderBars({}); setInstruction(`Λάθος ζευγάρι — τώρα πρέπει να συγκρίνεις τα <strong>${arr[bJ-1]}</strong> και <strong>${arr[bJ]}</strong>.`); }, 1600);
+    return;
+  }
+
+  feedback('✓ Σωστό ζευγάρι. Τώρα αποφάσισε αν χρειάζεται αντιμετάθεση. &nbsp;+5', 'ok');
+  addScore(5);
+  phase = 'decide';
+  renderBars({ comparing: [lo, hi] });
+  setInstruction(`Σύγκριση: το ${arr[lo]} με το ${arr[hi]}. Χρειάζεται αντιμετάθεση;`);
+  showBubbleDecide();
+}
+
+function showBubbleDecide() {
+  qs('action-btns').innerHTML = `
+    <button class="btn btn-swap" onclick="bubbleDecide(true)">🔄 ΑΝΤΙΜΕΤΑΘΕΣΗ</button>
+    <button class="btn btn-keep" onclick="bubbleDecide(false)">✓ ΚΡΑΤΗΣΗ</button>
+    <button class="btn btn-hint" onclick="bubbleHint()">💡 Υπόδειξη</button>
+  `;
+}
+
+function bubbleHint() {
+  const j = bJ;
+  const msg = arr[j] < arr[j-1]
+    ? `Υπόδειξη: ${arr[j]} < ${arr[j-1]} -> χρειάζεται αντιμετάθεση`
+    : `Υπόδειξη: ${arr[j]} ≥ ${arr[j-1]} -> δεν χρειάζεται αντιμετάθεση`;
+  feedback(msg, 'info');
+  addScore(-3);
+}
+
+function bubbleDecide(wantsSwap) {
+  const j = bJ;
+  const shouldSwap = arr[j] < arr[j - 1];
+  clearActions();
+
+  comparisons++;
+  if (wantsSwap === shouldSwap) {
+    if (shouldSwap) {
+      addScore(10); swaps++;
+      feedback(`✓ Σωστά! ${arr[j]} είναι μικρότερο από ${arr[j-1]}, άρα γίνεται αντιμετάθεση. &nbsp;+10`, 'ok');
+      renderBars({ correct: [j-1, j] });
+      setTimeout(() => {
+        [arr[j-1], arr[j]] = [arr[j], arr[j-1]];
+        bubbleNextStep();
+      }, 500);
+    } else {
+      addScore(10);
+      feedback(`✓ Σωστά! ${arr[j-1]} ≤ ${arr[j]}, άρα είναι ήδη στη σωστή σειρά — δεν χρειάζεται αντιμετάθεση. &nbsp;+10`, 'ok');
+      bubbleNextStep();
+    }
+  } else {
+    addScore(-10); addError();
+    feedback(shouldSwap
+      ? `✗ Λάθος! Το ${arr[j]} είναι μικρότερο από το ${arr[j-1]}, άρα πρέπει να πάει αριστερά. &nbsp;−10`
+      : `✗ Λάθος! Τα στοιχεία είναι ήδη στη σωστή σειρά, οπότε δεν χρειάζεται αντιμετάθεση. &nbsp;−10`, 'err');
+    renderBars({ wrong: [j-1, j] });
+    setTimeout(() => {
+      if (shouldSwap) { [arr[j-1], arr[j]] = [arr[j], arr[j-1]]; swaps++; }
+      bubbleNextStep();
+    }, 1000);
+  }
+}
+
+function bubbleNextStep() {
+  doneSteps++;
+  bJ--;
+  phase = 'select';
+  sel   = -1;
+  const n = arr.length;
+  if (bJ <= bPass) {
+    bPass++;
+    bJ = n - 1;
+    if (bPass >= n - 1) { showVictory(); return; }
+    feedback(`Ο γύρος ${bPass} ολοκληρώθηκε. Συνέχισε!`, 'info');
+  }
+  refreshStats();
+  renderBars({});
+  setInstruction(`Γύρος ${bPass+1}: Κλίκαρε τα δύο επόμενα γειτονικά στοιχεία από τα δεξιά.`);
+}
+
+// ─────────────────────────────────────────────
+//  SELECTION SORT LOGIC
+// ─────────────────────────────────────────────
+function selectionInstruction() {
+  if (sScanDone) {
+    return `Γύρος ${sPass+1}: Το μικρότερο στοιχείο είναι το ${arr[sMinIdx]}. Κλίκαρε τη θέση [${sPass}] για την αντιμετάθεση.`;
+  }
+  return `Γύρος ${sPass+1}: Ψάχνεις το μικρότερο στοιχείο. Τώρα μικρότερο είναι το ${arr[sMinIdx]}. Κλίκαρε το επόμενο στοιχείο [${sJ}].`;
+}
+
+function handleSelectionClick(idx) {
+  if (phase === 'animating') return;
+  if (sScanDone) {
+    if (idx === sPass) {
+      addScore(10);
+      const msg = sMinIdx === sPass
+        ? `✓ Σωστά! Το ${arr[sPass]} είναι ήδη στη σωστή θέση. &nbsp;+10`
+        : `✓ Σωστά! Γίνεται αντιμετάθεση των ${arr[sPass]} και ${arr[sMinIdx]}. &nbsp;+10`;
+      feedback(msg, 'ok');
+      swaps++;
+      renderBars({ correct: [sPass, sMinIdx] });
+      phase = 'animating';
+      setTimeout(() => {
+        [arr[sPass], arr[sMinIdx]] = [arr[sMinIdx], arr[sPass]];
+        if (isSorted(arr)) { showVictory(); return; }
+        doneSteps++;
+        sPass++;
+        if (sPass >= arr.length - 1) { showVictory(); return; }
+        sJ = sPass + 1; sMinIdx = sPass; sScanDone = false;
+        phase = 'select';
+        refreshStats();
+        renderBars({});
+        feedback(`Γύρος ${sPass} ολοκληρώθηκε. Συνέχισε!`, 'info');
+        setInstruction(selectionInstruction());
+      }, 500);
+    } else {
+      feedback(`✗ Κλίκαρε το στοιχείο <strong>${arr[sPass]}</strong> στην αρχή της αταξινόμητης περιοχής για να γίνει η αντιμετάθεση. &nbsp;−5`, 'err');
+      addScore(-5); addError();
+    }
+    return;
+  }
+
+  if (idx !== sJ) {
+    feedback(`✗ Λάθος! Τώρα πρέπει να κλικάρεις το στοιχείο <strong>${arr[sJ]}</strong>. &nbsp;−10`, 'err');
+    addScore(-10); addError();
+    phase = 'animating';
+    renderBars({ wrong: [idx] });
+    setTimeout(() => {
+      phase = 'select';
+      renderBars({ selected: [sMinIdx], comparing: [sJ] });
+    }, 700);
+    return;
+  }
+
+  addScore(3); comparisons++;
+  feedback(`Σύγκριση: ${arr[sJ]} και ${arr[sMinIdx]}. Ποιο είναι μικρότερο; &nbsp;+3`, 'info');
+  renderBars({ comparing: [sJ, sMinIdx] });
+  phase = 'decide';
+  showSelectionDecide();
+}
+
+function showSelectionDecide() {
+  qs('action-btns').innerHTML = `
+    <button class="btn btn-swap" onclick="selDecide(true)">Το ${arr[sJ]} είναι το νέο μικρότερο στοιχείο</button>
+    <button class="btn btn-keep" onclick="selDecide(false)">Το ${arr[sMinIdx]} παραμένει το μικρότερο στοιχείο</button>
+    <button class="btn btn-hint" onclick="selHint()">💡 Υπόδειξη</button>
+  `;
+}
+
+function selHint() {
+  const msg = arr[sJ] < arr[sMinIdx]
+    ? `Υπόδειξη: ${arr[sJ]} < ${arr[sMinIdx]} → νέο μικρότερο`
+    : `Υπόδειξη: ${arr[sMinIdx]} ≤ ${arr[sJ]} → παραμένει μικρότερο`;
+  feedback(msg, 'info');
+  addScore(-3);
+}
+
+function selDecide(pickedJ) {
+  const isSmaller = arr[sJ] < arr[sMinIdx];
+  clearActions();
+  phase = 'select';
+
+  if (pickedJ === isSmaller) {
+    addScore(7);
+    if (isSmaller) { feedback(`✓ Σωστά! Το ${arr[sJ]} είναι το νέο μικρότερο στοιχείο. &nbsp;+7`, 'ok'); sMinIdx = sJ; }
+    else             feedback(`✓ Σωστά! Το ${arr[sMinIdx]} παραμένει το μικρότερο στοιχείο. &nbsp;+7`, 'ok');
+  } else {
+    addScore(-8); addError();
+    feedback(isSmaller
+      ? `✗ Λάθος! Το ${arr[sJ]} είναι μικρότερο, άρα γίνεται το νέο μικρότερο στοιχείο. &nbsp;−8`
+      : `✗ Λάθος! Το ${arr[sMinIdx]} παραμένει το μικρότερο στοιχείο. &nbsp;−8`, 'err');
+    if (isSmaller) sMinIdx = sJ;
+  }
+
+  sJ++;
+  if (sJ >= arr.length) sScanDone = true;
+  refreshStats();
+  renderBars(sScanDone ? { selected: [sMinIdx] } : { selected: [sMinIdx], comparing: [sJ] });
+  setInstruction(selectionInstruction());
+}
+
+// ─────────────────────────────────────────────
+//  INSERTION SORT LOGIC
+// ─────────────────────────────────────────────
+function insertionInstruction() {
+  const keyVal = arr[getInsertionKeyIndex()] !== undefined ? arr[getInsertionKeyIndex()] : '?';
+  return `Γύρος ${insPass} — κλειδί: <strong>${keyVal}</strong>.&nbsp; Σύγκρινε με το στοιχείο αριστερά του.`;
+}
+
+function handleInsertionClick(idx) {
+  if (phase === 'decide' || phase === 'animating') return;
+
+  const pair = [insJ, insJ + 1];
+  if (!pair.includes(idx)) {
+    feedback(`✗ Λάθος! Τώρα συγκρίνεις μόνο τα <strong>${arr[insJ]}</strong> και <strong>${arr[insJ+1]}</strong>. &nbsp;−5`, 'err');
+    addScore(-5); addError();
+    renderBars(getInsertionHighlights({ wrong: [idx] }));
+    setTimeout(() => { renderBars(getInsertionHighlights()); setInstruction(insertionInstruction()); }, 1000);
+    return;
+  }
+
+  feedback(`✓ Σωστή επιλογή. Σύγκριση: ${arr[insJ]} και ${arr[insJ+1]}. Τι πρέπει να γίνει; &nbsp;+5`, 'ok');
+  addScore(5); comparisons++;
+  phase = 'decide';
+  renderBars(getInsertionHighlights());
+  setInstruction(`<strong>${arr[insJ]}</strong> vs <strong>${arr[insJ+1]}</strong> — αντιμετάθεση ή κράτηση;`);
+  showInsertionDecide();
+}
+
+function showInsertionDecide() {
+  qs('action-btns').innerHTML = `
+    <button class="btn btn-swap" onclick="insDecide(true)">🔄 ΑΝΤΙΜΕΤΑΘΕΣΗ</button>
+    <button class="btn btn-keep" onclick="insDecide(false)">✓ ΚΡΑΤΗΣΗ</button>
+    <button class="btn btn-hint" onclick="insHint()">💡 Υπόδειξη</button>
+  `;
+}
+
+function insHint() {
+  const msg = arr[insJ] > arr[insJ+1]
+    ? `Υπόδειξη: ${arr[insJ]} > ${arr[insJ+1]} -> κάνε αντιμετάθεση`
+    : `Υπόδειξη: ${arr[insJ]} ≤ ${arr[insJ+1]} → κράτηση`;
+  feedback(msg, 'info');
+  addScore(-3);
+}
+
+function insDecide(wantsSwap) {
+  const shouldSwap = arr[insJ] > arr[insJ+1];
+  clearActions();
+  phase = 'animating';
+
+  if (wantsSwap === shouldSwap) {
+    if (shouldSwap) {
+      addScore(10); swaps++;
+      feedback(`✓ Σωστά! Το ${arr[insJ]} είναι μεγαλύτερο, άρα γίνεται αντιμετάθεση. &nbsp;+10`, 'ok');
+      renderBars(getInsertionHighlights({ correct: [insJ, insJ+1] }));
+      setTimeout(() => {
+        [arr[insJ], arr[insJ+1]] = [arr[insJ+1], arr[insJ]];
+        if (isSorted(arr)) { showVictory(); return; }
+        insJ--;
+        phase = 'select';
+        if (insJ < 0) { insNextPass(); }
+        else { refreshStats(); renderBars(getInsertionHighlights()); setInstruction(insertionInstruction()); }
+      }, 500);
+    } else {
+      addScore(10);
+      feedback(`✓ Σωστά! Το στοιχείο βρήκε τη σωστή θέση του. &nbsp;+10`, 'ok');
+      if (isSorted(arr)) { showVictory(); return; }
+      phase = 'select';
+      insNextPass();
+    }
+  } else {
+    addScore(-10); addError();
+    feedback(shouldSwap
+      ? `✗ Λάθος! Το ${arr[insJ]} είναι μεγαλύτερο, άρα χρειάζεται αντιμετάθεση. &nbsp;−10`
+      : `✗ Λάθος! Το στοιχείο έχει ήδη βρει τη σωστή θέση του. &nbsp;−10`, 'err');
+    renderBars(getInsertionHighlights({ wrong: [insJ, insJ+1] }));
+    setTimeout(() => {
+      phase = 'select';
+      if (shouldSwap) {
+        [arr[insJ], arr[insJ+1]] = [arr[insJ+1], arr[insJ]];
+        if (isSorted(arr)) { showVictory(); return; }
+        insJ--;
+        if (insJ < 0) { insNextPass(); }
+        else {
+          refreshStats();
+          renderBars(getInsertionHighlights());
+          setInstruction(insertionInstruction());
+        }
+      } else {
+        if (isSorted(arr)) { showVictory(); return; }
+        insNextPass();
+      }
+    }, 1000);
+  }
+}
+
+function insNextPass() {
+  doneSteps++;
+  insPass++;
+  if (insPass >= arr.length || isSorted(arr)) { showVictory(); return; }
+  insJ = insPass - 1;
+  refreshStats();
+  feedback(`Ο γύρος ${insPass-1} ολοκληρώθηκε. Πάμε στο επόμενο στοιχείο.`, 'info');
+  renderBars(getInsertionHighlights());
+  setInstruction(insertionInstruction());
+}
+
+// ─────────────────────────────────────────────
+//  VICTORY
+// ─────────────────────────────────────────────
+function showVictory() {
+  phase = 'done';
+  clearActions();
+  qs('feedback').textContent = '';
+  qs('feedback').className = 'feedback';
+  setInstruction('Η ταξινόμηση ολοκληρώθηκε.');
+  renderBars({ correct: doneHighlight() });
+
+  const stars = errors === 0 ? 3 : errors <= 2 ? 2 : 1;
+  levelStars[currentLevel] = Math.max(levelStars[currentLevel], stars);
+
+  for (let i = 0; i < LEVELS.length; i++) {
+    qs('stars-' + i).textContent = '★'.repeat(levelStars[i]) + '☆'.repeat(3 - levelStars[i]);
+  }
+
+  qs('v-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  qs('v-score').innerHTML = `Τελική βαθμολογία: <span>${score}</span> &nbsp;|&nbsp; Λάθη: <span>${errors}</span>`;
+  qs('v-stats').innerHTML = `
+    <div class="vstat"><div class="vstat-val">${comparisons}</div><div class="vstat-lbl">Συγκρίσεις</div></div>
+    <div style="width:1px;background:rgba(0,200,255,0.15)"></div>
+    <div class="vstat"><div class="vstat-val">${swaps}</div><div class="vstat-lbl">Αντιμεταθέσεις</div></div>
+  `;
+
+  const nextBtn = qs('v-next');
+  if (currentLevel + 1 < LEVELS.length) {
+    nextBtn.style.display = 'inline-block';
+    nextBtn.textContent   = 'Επόμενο: ' + LEVELS[currentLevel + 1].name + ' →';
+  } else {
+    nextBtn.style.display = 'none';
+  }
+
+  setTimeout(() => qs('victory').classList.add('show'), 700);
+}
+
+// ─────────────────────────────────────────────
+//  SPLASH
+// ─────────────────────────────────────────────
+function hideSplash() {
+  const splash = qs('splash');
+  splash.classList.add('hidden');
+  setTimeout(() => {
+    splash.style.display = 'none';
+    qs('main-header').style.display = 'block';
+    qs('main-game').style.display   = 'block';
+    startGame();
+  }, 400);
+}
+
+// ─────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────
+// game starts after splash
+</script>
+</body>
+</html>
