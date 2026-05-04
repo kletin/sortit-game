@@ -19,7 +19,7 @@ The user interacts with the sorting process step by step, choosing comparisons a
 Download or clone the repository and open `index.html` in any modern web browser.
 
 ## Educational context
-The game was developed for an academic assignment in Informatics Education and is based on the theory of sorting algorithms taught in upper secondary education.
+The game was developed as part of the course "Didactics of Informatics" and is based on the theory of sorting algorithms taught in upper secondary education.
 
 ## Author / Team
 •	Σωτηρία Κενανίδου iis23162
