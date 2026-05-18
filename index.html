@@ -1,26 +1,3 @@
-<!--
-  Educational Sorting Game: Sort It!
-
-  Implements:
-  - Bubble Sort
-  - Insertion Sort
-  - Selection Sort
-
-  Description:
-  Interactive step-by-step educational game for learning sorting algorithms.
-  The user manually performs comparisons and swaps, receiving real-time feedback.
-
-  Technologies:
-  HTML5, CSS3, Vanilla JavaScript
-
-  Team:
-  - Sotiria Kenanidou (iis23162)
-  - Loukia Konstantinou (ics23164)
-  - Dimitra Liakou (iis23114)
-  - Kalliopi Maria Tintikaki (ics23088)
--->
-
-
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -888,16 +865,16 @@
         <div class="slc-tag">§3.7.1</div>
       </div>
       <div class="splash-level-card">
-        <div class="slc-icon">📥</div>
-        <div class="slc-name">Insertion Sort</div>
-        <div class="slc-desc">Εισαγωγή στη σωστή θέση</div>
-        <div class="slc-tag">§3.7.3</div>
-      </div>
-      <div class="splash-level-card">
         <div class="slc-icon">🎯</div>
         <div class="slc-name">Selection Sort</div>
         <div class="slc-desc">Εύρεση μικρότερου στοιχείου κάθε φορά</div>
         <div class="slc-tag">§3.7.2</div>
+      </div>
+      <div class="splash-level-card">
+        <div class="slc-icon">📥</div>
+        <div class="slc-name">Insertion Sort</div>
+        <div class="slc-desc">Εισαγωγή στη σωστή θέση</div>
+        <div class="slc-tag">§3.7.3</div>
       </div>
     </div>
 
@@ -925,6 +902,16 @@
     <h1>Sort It!</h1>
   </div>
   <p>Μάθε αλγορίθμους ταξινόμησης βήμα-βήμα · ΑΕΠΠ Γ΄ Λυκείου · §3.7</p>
+  <div style="display:flex;gap:8px;margin-top:6px;">
+    <button id="music-btn" onclick="toggleMusic()" title="Μουσική on/off" style="
+      background:transparent;border:1px solid rgba(255,77,109,0.6);border-radius:8px;
+      color:rgba(255,100,120,0.85);font-size:1.2rem;padding:4px 10px;cursor:pointer;
+      transition:border-color .25s,color .25s;">🎵</button>
+    <button id="sound-btn" onclick="toggleSound()" title="Ήχος on/off" style="
+      background:transparent;border:1px solid rgba(0,210,255,0.5);border-radius:8px;
+      color:#e8f6ff;font-size:1.2rem;padding:4px 10px;cursor:pointer;
+      transition:border-color .25s,color .25s;">🔊</button>
+  </div>
 </header>
 
 <div class="game-container" id="main-game" style="display:none">
@@ -937,13 +924,13 @@
       <div class="tab-stars" id="stars-0">☆☆☆</div>
     </div>
     <div class="level-tab" id="tab-1" onclick="selectLevel(1)">
-      <div class="tab-name">Insertion Sort</div>
-      <div class="tab-algo">Ευθεία Εισαγωγή</div>
+      <div class="tab-name">Selection Sort</div>
+      <div class="tab-algo">Ταξινόμηση Επιλογής</div>
       <div class="tab-stars" id="stars-1">☆☆☆</div>
     </div>
     <div class="level-tab" id="tab-2" onclick="selectLevel(2)">
-      <div class="tab-name">Selection Sort</div>
-      <div class="tab-algo">Ταξινόμηση Επιλογής</div>
+      <div class="tab-name">Insertion Sort</div>
+      <div class="tab-algo">Ευθεία Εισαγωγή</div>
       <div class="tab-stars" id="stars-2">☆☆☆</div>
     </div>
   </div>
@@ -1044,6 +1031,19 @@ const LEVELS = [
     ]
   },
   {
+    name: 'Selection Sort',
+    size: 5,
+    algo: 'selection',
+    info: '<strong>Selection Sort (Ταξινόμηση Επιλογής):</strong> Σε κάθε γύρο σαρώνεις τα αταξινόμητα στοιχεία ένα-ένα και βρίσκεις το <em>μικρότερο</em>. Μόλις το βρεις, το βάζεις στη σωστή θέση με <em>ακριβώς μία αντιμετάθεση</em> ανά γύρο.',
+    pseudo: [
+      'για i = 0 έως n-2:',
+      '  <span class="hl">min_idx = i // θέση μικρότερου στοιχείου</span>',
+      '  για j = i+1 έως n-1:',
+      '    <span class="hl">αν arr[j] &lt; arr[min_idx]: min_idx = j</span>',
+      '  <span class="hl">αντιμετάθεση arr[i], arr[min_idx]</span>',
+    ]
+  },
+  {
     name: 'Insertion Sort',
     size: 5,
     algo: 'insertion',
@@ -1057,23 +1057,142 @@ const LEVELS = [
       '    <span class="hl">j = j - 1</span>',
     ]
   },
-  {
-    name: 'Selection Sort',
-    size: 5,
-    algo: 'selection',
-    info: '<strong>Selection Sort (Ταξινόμηση Επιλογής):</strong> Σε κάθε γύρο σαρώνεις τα αταξινόμητα στοιχεία ένα-ένα και βρίσκεις το <em>μικρότερο</em>. Μόλις το βρεις, το βάζεις στη σωστή θέση με <em>ακριβώς μία αντιμετάθεση</em> ανά γύρο.',
-    pseudo: [
-      'για i = 0 έως n-2:',
-      '  <span class="hl">min_idx = i // θέση μικρότερου στοιχείου</span>',
-      '  για j = i+1 έως n-1:',
-      '    <span class="hl">αν arr[j] &lt; arr[min_idx]: min_idx = j</span>',
-      '  <span class="hl">αντιμετάθεση arr[i], arr[min_idx]</span>',
-    ]
-  },
 ];
 
 // ─────────────────────────────────────────────
 //  STATE
+// ─────────────────────────────────────────────
+//  AUDIO
+// ─────────────────────────────────────────────
+let audioCtx = null;
+let soundEnabled = true;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, dur, type = 'sine', vol = 0.25, delay = 0) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+    gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + dur);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + dur + 0.01);
+  } catch(e) {}
+}
+
+function soundCorrect() {
+  playTone(523, 0.08, 'sine', 0.55);
+  playTone(659, 0.20, 'sine', 0.55, 0.08);
+}
+function soundWrong() {
+  playTone(220, 0.08, 'sawtooth', 0.50);
+  playTone(160, 0.25, 'sawtooth', 0.50, 0.08);
+}
+function soundVictory() {
+  [[523,0],[659,0.12],[784,0.24],[1047,0.38]].forEach(([f,d]) =>
+    playTone(f, d === 0.38 ? 0.45 : 0.12, 'sine', 0.28, d));
+}
+function soundClick() {
+  playTone(440, 0.05, 'sine', 0.08);
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const sb = qs('sound-btn');
+  sb.textContent = soundEnabled ? '🔊' : '🔇';
+  sb.style.border   = soundEnabled ? '1px solid rgba(0,210,255,0.5)'   : '1px solid rgba(255,77,109,0.6)';
+  sb.style.color    = soundEnabled ? '#e8f6ff'                         : 'rgba(255,100,120,0.85)';
+  if (soundEnabled) { soundClick(); }
+}
+
+/* ── Background Music ─────────────────────────────────────────── */
+let bgMusicEnabled = false;
+let bgLoopTimer    = null;
+const BG_TEMPO = 0.42; // seconds per beat  (~143 BPM — lively but not frantic)
+
+// Melody: [freq_hz, beats]  (0 = rest)
+// Two-part 16-beat loop in C major pentatonic (C D E G A)
+const BG_MELODY = [
+  [659,0.5],[523,0.5],[587,0.5],[659,0.5],
+  [783,0.5],[659,0.5],[523,0.5],[0,0.5],
+  [880,0.5],[783,0.5],[659,0.5],[523,0.5],
+  [587,0.5],[659,1.0],[0,0.5],
+  [523,0.5],[659,0.5],[783,0.5],[880,0.5],
+  [783,0.5],[659,0.5],[587,0.5],[523,0.5],
+  [659,0.5],[523,0.5],[440,0.5],[523,0.5],
+  [659,2.0],[0,0.5],
+];
+// Bass: one note per 2 beats, C–G–A–G pattern
+const BG_BASS = [
+  [130,1],[155,1],[165,1],[155,1],
+  [130,1],[155,1],[110,1],[130,1],
+];
+
+function _scheduleNotes(notes, startTime, vol, type='sine') {
+  const ctx = getAudioCtx();
+  let t = startTime;
+  for (const [freq, beats] of notes) {
+    const dur = beats * BG_TEMPO;
+    if (freq > 0) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(vol, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.85);
+      osc.start(t);
+      osc.stop(t + dur);
+    }
+    t += dur;
+  }
+  return t - startTime; // total duration in seconds
+}
+
+function _bgLoop() {
+  if (!bgMusicEnabled) return;
+  const ctx  = getAudioCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+  const now  = ctx.currentTime;
+  const dur  = _scheduleNotes(BG_MELODY, now, 0.055, 'sine');
+                _scheduleNotes(BG_BASS,   now, 0.06,  'triangle');
+  bgLoopTimer = setTimeout(_bgLoop, (dur - 0.08) * 1000); // slight overlap for seamless loop
+}
+
+function startBgMusic() {
+  bgMusicEnabled = true;
+  _bgLoop();
+  const btn = qs('music-btn');
+  btn.textContent = '🎶';
+  btn.style.border = '1px solid rgba(0,210,255,0.5)';
+  btn.style.color  = '#e8f6ff';
+}
+
+function stopBgMusic() {
+  bgMusicEnabled = false;
+  clearTimeout(bgLoopTimer);
+  bgLoopTimer = null;
+  const btn = qs('music-btn');
+  btn.textContent = '🎵';
+  btn.style.border = '1px solid rgba(255,77,109,0.6)';
+  btn.style.color  = 'rgba(255,100,120,0.85)';
+}
+
+function toggleMusic() {
+  if (bgMusicEnabled) { stopBgMusic(); } else { startBgMusic(); }
+}
+
 // ─────────────────────────────────────────────
 let currentLevel = 0;
 let levelStars    = [0, 0, 0];
@@ -1133,6 +1252,7 @@ function colorFor(val) {
   return COLORS[Math.min(val - 1, COLORS.length - 1)];
 }
 function qs(id) { return document.getElementById(id); }
+function n(v)  { return `<span style="display:inline;margin:0 3px;padding:2px 6px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:4px;font-weight:700;">${v}</span>`; }
 function setErrors(nextErrors) {
   errors = nextErrors;
   qs('errors-disp').textContent = errors;
@@ -1211,7 +1331,7 @@ function startGame() {
   refreshStats();
   renderBars(lv.algo === 'insertion' ? getInsertionHighlights() : {});
   setInstruction(lv.algo === 'bubble'
-    ? `Γύρος 1: Ξεκίνα από τα δεξιά — κλίκαρε τα στοιχεία <strong>${arr[arr.length - 2]}</strong> και <strong>${arr[arr.length - 1]}</strong>.`
+    ? `Γύρος 1: Ξεκίνα από τα δεξιά — κλίκαρε τα στοιχεία ${n(arr[arr.length - 2])} και ${n(arr[arr.length - 1])}.`
     : lv.algo === 'selection'
       ? selectionInstruction()
       : insertionInstruction()
@@ -1301,11 +1421,11 @@ function refreshStats() {
   qs('prog-pct').textContent = pct + '%';
 }
 
-function setInstruction(text) { qs('instruction').innerHTML = text; }
+function setInstruction(text) { qs('instruction').innerHTML = `<span>${text}</span>`; }
 
 function feedback(msg, type) {
   const el = qs('feedback');
-  el.innerHTML = msg;
+  el.innerHTML = `<span>${msg}</span>`;
   el.className = 'feedback ' + type;
 }
 
@@ -1357,8 +1477,9 @@ function handleBubbleClick(idx) {
 
   if (sel === -1) {
     sel = idx;
+    soundClick();
     renderBars({ selected: [idx] });
-    setInstruction(`Επίλεξε το δεύτερο στοιχείο για σύγκριση με το ${arr[idx]}.`);
+    setInstruction(`Επίλεξε το δεύτερο στοιχείο για σύγκριση με το ${n(arr[idx])}.`);
     return;
   }
 
@@ -1382,10 +1503,10 @@ function handleBubbleClick(idx) {
   }
 
   if (lo !== bJ - 1) {
-    feedback(`✗ Λάθος ζευγάρι! Τώρα πρέπει να συγκρίνεις τα ${arr[bJ-1]} και ${arr[bJ]}. &nbsp;−10`, 'err');
+    feedback(`✗ Λάθος ζευγάρι! Τώρα πρέπει να συγκρίνεις τα ${n(arr[bJ-1])} και ${n(arr[bJ])}. &nbsp;−10`, 'err');
     addScore(-10); addError();
     renderBars({ wrong: [lo, hi] });
-    setTimeout(() => { renderBars({}); setInstruction(`Λάθος ζευγάρι — τώρα πρέπει να συγκρίνεις τα <strong>${arr[bJ-1]}</strong> και <strong>${arr[bJ]}</strong>.`); }, 1600);
+    setTimeout(() => { renderBars({}); setInstruction(`Λάθος ζευγάρι — τώρα πρέπει να συγκρίνεις τα ${n(arr[bJ-1])} και ${n(arr[bJ])}.`); }, 1600);
     return;
   }
 
@@ -1393,7 +1514,7 @@ function handleBubbleClick(idx) {
   addScore(5);
   phase = 'decide';
   renderBars({ comparing: [lo, hi] });
-  setInstruction(`Σύγκριση: το ${arr[lo]} με το ${arr[hi]}. Χρειάζεται αντιμετάθεση;`);
+  setInstruction(`Σύγκριση: το ${n(arr[lo])} με το ${n(arr[hi])}. Χρειάζεται αντιμετάθεση;`);
   showBubbleDecide();
 }
 
@@ -1408,8 +1529,8 @@ function showBubbleDecide() {
 function bubbleHint() {
   const j = bJ;
   const msg = arr[j] < arr[j-1]
-    ? `Υπόδειξη: ${arr[j]} < ${arr[j-1]} -> χρειάζεται αντιμετάθεση`
-    : `Υπόδειξη: ${arr[j]} ≥ ${arr[j-1]} -> δεν χρειάζεται αντιμετάθεση`;
+    ? `Υπόδειξη: δεξί (${arr[j]}) < αριστερό (${arr[j-1]}) → χρειάζεται αντιμετάθεση`
+    : `Υπόδειξη: δεξί (${arr[j]}) ≥ αριστερό (${arr[j-1]}) → δεν χρειάζεται αντιμετάθεση`;
   feedback(msg, 'info');
   addScore(-3);
 }
@@ -1422,23 +1543,23 @@ function bubbleDecide(wantsSwap) {
   comparisons++;
   if (wantsSwap === shouldSwap) {
     if (shouldSwap) {
-      addScore(10); swaps++;
-      feedback(`✓ Σωστά! ${arr[j]} είναι μικρότερο από ${arr[j-1]}, άρα γίνεται αντιμετάθεση. &nbsp;+10`, 'ok');
+      addScore(10); swaps++; soundCorrect();
+      feedback(`✓ Σωστά! Το δεξί <strong>${arr[j]}</strong> &lt; το αριστερό <strong>${arr[j-1]}</strong> → αντιμετάθεση, το <strong>${arr[j]}</strong> ανεβαίνει αριστερά. &nbsp;+10`, 'ok');
       renderBars({ correct: [j-1, j] });
       setTimeout(() => {
         [arr[j-1], arr[j]] = [arr[j], arr[j-1]];
         bubbleNextStep();
       }, 500);
     } else {
-      addScore(10);
-      feedback(`✓ Σωστά! ${arr[j-1]} ≤ ${arr[j]}, άρα είναι ήδη στη σωστή σειρά — δεν χρειάζεται αντιμετάθεση. &nbsp;+10`, 'ok');
+      addScore(10); soundCorrect();
+      feedback(`✓ Σωστά! Το δεξί <strong>${arr[j]}</strong> ≥ το αριστερό <strong>${arr[j-1]}</strong> → δεν χρειάζεται αντιμετάθεση. &nbsp;+10`, 'ok');
       bubbleNextStep();
     }
   } else {
-    addScore(-10); addError();
+    addScore(-10); addError(); soundWrong();
     feedback(shouldSwap
-      ? `✗ Λάθος! Το ${arr[j]} είναι μικρότερο από το ${arr[j-1]}, άρα πρέπει να πάει αριστερά. &nbsp;−10`
-      : `✗ Λάθος! Τα στοιχεία είναι ήδη στη σωστή σειρά, οπότε δεν χρειάζεται αντιμετάθεση. &nbsp;−10`, 'err');
+      ? `✗ Λάθος! Το δεξί <strong>${arr[j]}</strong> &lt; το αριστερό <strong>${arr[j-1]}</strong> → χρειάζεται αντιμετάθεση. &nbsp;−10`
+      : `✗ Λάθος! Το δεξί <strong>${arr[j]}</strong> ≥ το αριστερό <strong>${arr[j-1]}</strong> → δεν χρειάζεται αντιμετάθεση. &nbsp;−10`, 'err');
     renderBars({ wrong: [j-1, j] });
     setTimeout(() => {
       if (shouldSwap) { [arr[j-1], arr[j]] = [arr[j], arr[j-1]]; swaps++; }
@@ -1453,10 +1574,11 @@ function bubbleNextStep() {
   phase = 'select';
   sel   = -1;
   const n = arr.length;
+  if (isSorted(arr)) { showVictory(); return; }
   if (bJ <= bPass) {
     bPass++;
     bJ = n - 1;
-    if (bPass >= n - 1) { showVictory(); return; }
+    if (bPass >= n - 1 || isSorted(arr)) { showVictory(); return; }
     feedback(`Ο γύρος ${bPass} ολοκληρώθηκε. Συνέχισε!`, 'info');
   }
   refreshStats();
@@ -1469,21 +1591,21 @@ function bubbleNextStep() {
 // ─────────────────────────────────────────────
 function selectionInstruction() {
   if (sScanDone) {
-    return `Γύρος ${sPass+1}: Το μικρότερο στοιχείο είναι το ${arr[sMinIdx]}. Κλίκαρε τη θέση [${sPass}] για την αντιμετάθεση.`;
+    return `Γύρος ${sPass+1}: Το μικρότερο στοιχείο είναι το ${n(arr[sMinIdx])}. Κλίκαρε το για αντιμετάθεση.`;
   }
-  return `Γύρος ${sPass+1}: Ψάχνεις το μικρότερο στοιχείο. Τώρα μικρότερο είναι το ${arr[sMinIdx]}. Κλίκαρε το επόμενο στοιχείο [${sJ}].`;
+  return `Γύρος ${sPass+1}: Τρέχον ελάχιστο: ${n(arr[sMinIdx])}. Κλίκαρε το επόμενο στοιχείο για σύγκριση.`;
 }
 
 function handleSelectionClick(idx) {
   if (phase === 'animating') return;
   if (sScanDone) {
     if (idx === sPass) {
-      addScore(10);
+      addScore(10); soundCorrect();
       const msg = sMinIdx === sPass
-        ? `✓ Σωστά! Το ${arr[sPass]} είναι ήδη στη σωστή θέση. &nbsp;+10`
-        : `✓ Σωστά! Γίνεται αντιμετάθεση των ${arr[sPass]} και ${arr[sMinIdx]}. &nbsp;+10`;
+        ? `✓ Σωστά! Το ${n(arr[sPass])} είναι ήδη στη σωστή θέση. &nbsp;+10`
+        : `✓ Σωστά! Γίνεται αντιμετάθεση των ${n(arr[sPass])} και ${n(arr[sMinIdx])}. &nbsp;+10`;
       feedback(msg, 'ok');
-      swaps++;
+      if (sMinIdx !== sPass) swaps++;
       renderBars({ correct: [sPass, sMinIdx] });
       phase = 'animating';
       setTimeout(() => {
@@ -1496,19 +1618,19 @@ function handleSelectionClick(idx) {
         phase = 'select';
         refreshStats();
         renderBars({});
-        feedback(`Γύρος ${sPass} ολοκληρώθηκε. Συνέχισε!`, 'info');
+        feedback(`Ο γύρος ${sPass} ολοκληρώθηκε. Συνέχισε!`, 'info');
         setInstruction(selectionInstruction());
       }, 500);
     } else {
-      feedback(`✗ Κλίκαρε το στοιχείο <strong>${arr[sPass]}</strong> στην αρχή της αταξινόμητης περιοχής για να γίνει η αντιμετάθεση. &nbsp;−5`, 'err');
-      addScore(-5); addError();
+      feedback(`✗ Κλίκαρε το στοιχείο ${n(arr[sPass])} στην αρχή της αταξινόμητης περιοχής για να γίνει η αντιμετάθεση. &nbsp;−5`, 'err');
+      addScore(-5); addError(); soundWrong();
     }
     return;
   }
 
   if (idx !== sJ) {
-    feedback(`✗ Λάθος! Τώρα πρέπει να κλικάρεις το στοιχείο <strong>${arr[sJ]}</strong>. &nbsp;−10`, 'err');
-    addScore(-10); addError();
+    feedback(`✗ Λάθος! Τώρα πρέπει να κλικάρεις το στοιχείο ${n(arr[sJ])}. &nbsp;−10`, 'err');
+    addScore(-10); addError(); soundWrong();
     phase = 'animating';
     renderBars({ wrong: [idx] });
     setTimeout(() => {
@@ -1518,8 +1640,8 @@ function handleSelectionClick(idx) {
     return;
   }
 
-  addScore(3); comparisons++;
-  feedback(`Σύγκριση: ${arr[sJ]} και ${arr[sMinIdx]}. Ποιο είναι μικρότερο; &nbsp;+3`, 'info');
+  addScore(3); comparisons++; soundClick();
+  feedback(`Σύγκριση: ${n(arr[sJ])} και ${n(arr[sMinIdx])}. Ποιο είναι μικρότερο; &nbsp;+3`, 'info');
   renderBars({ comparing: [sJ, sMinIdx] });
   phase = 'decide';
   showSelectionDecide();
@@ -1527,16 +1649,16 @@ function handleSelectionClick(idx) {
 
 function showSelectionDecide() {
   qs('action-btns').innerHTML = `
-    <button class="btn btn-swap" onclick="selDecide(true)">Το ${arr[sJ]} είναι το νέο μικρότερο στοιχείο</button>
-    <button class="btn btn-keep" onclick="selDecide(false)">Το ${arr[sMinIdx]} παραμένει το μικρότερο στοιχείο</button>
+    <button class="btn btn-swap" onclick="selDecide(true)">Το ${n(arr[sJ])} είναι το νέο μικρότερο στοιχείο</button>
+    <button class="btn btn-keep" onclick="selDecide(false)">Το ${n(arr[sMinIdx])} παραμένει το μικρότερο στοιχείο</button>
     <button class="btn btn-hint" onclick="selHint()">💡 Υπόδειξη</button>
   `;
 }
 
 function selHint() {
   const msg = arr[sJ] < arr[sMinIdx]
-    ? `Υπόδειξη: ${arr[sJ]} < ${arr[sMinIdx]} → νέο μικρότερο`
-    : `Υπόδειξη: ${arr[sMinIdx]} ≤ ${arr[sJ]} → παραμένει μικρότερο`;
+    ? `Υπόδειξη: ${n(arr[sJ])} &lt; ${n(arr[sMinIdx])} → νέο μικρότερο`
+    : `Υπόδειξη: ${n(arr[sMinIdx])} ≤ ${n(arr[sJ])} → παραμένει μικρότερο`;
   feedback(msg, 'info');
   addScore(-3);
 }
@@ -1547,14 +1669,14 @@ function selDecide(pickedJ) {
   phase = 'select';
 
   if (pickedJ === isSmaller) {
-    addScore(7);
-    if (isSmaller) { feedback(`✓ Σωστά! Το ${arr[sJ]} είναι το νέο μικρότερο στοιχείο. &nbsp;+7`, 'ok'); sMinIdx = sJ; }
-    else             feedback(`✓ Σωστά! Το ${arr[sMinIdx]} παραμένει το μικρότερο στοιχείο. &nbsp;+7`, 'ok');
+    addScore(7); soundCorrect();
+    if (isSmaller) { feedback(`✓ Σωστά! Το ${n(arr[sJ])} είναι το νέο μικρότερο στοιχείο. &nbsp;+7`, 'ok'); sMinIdx = sJ; }
+    else             feedback(`✓ Σωστά! Το ${n(arr[sMinIdx])} παραμένει το μικρότερο στοιχείο. &nbsp;+7`, 'ok');
   } else {
-    addScore(-8); addError();
+    addScore(-8); addError(); soundWrong();
     feedback(isSmaller
-      ? `✗ Λάθος! Το ${arr[sJ]} είναι μικρότερο, άρα γίνεται το νέο μικρότερο στοιχείο. &nbsp;−8`
-      : `✗ Λάθος! Το ${arr[sMinIdx]} παραμένει το μικρότερο στοιχείο. &nbsp;−8`, 'err');
+      ? `✗ Λάθος! Το ${n(arr[sJ])} είναι μικρότερο, άρα γίνεται το νέο μικρότερο στοιχείο. &nbsp;−8`
+      : `✗ Λάθος! Το ${n(arr[sMinIdx])} παραμένει το μικρότερο στοιχείο. &nbsp;−8`, 'err');
     if (isSmaller) sMinIdx = sJ;
   }
 
@@ -1570,7 +1692,7 @@ function selDecide(pickedJ) {
 // ─────────────────────────────────────────────
 function insertionInstruction() {
   const keyVal = arr[getInsertionKeyIndex()] !== undefined ? arr[getInsertionKeyIndex()] : '?';
-  return `Γύρος ${insPass} — κλειδί: <strong>${keyVal}</strong>.&nbsp; Σύγκρινε με το στοιχείο αριστερά του.`;
+  return `Γύρος ${insPass} — κλειδί: <strong>${keyVal}</strong>.&nbsp;Σύγκρινε με το στοιχείο αριστερά του.`;
 }
 
 function handleInsertionClick(idx) {
@@ -1578,18 +1700,18 @@ function handleInsertionClick(idx) {
 
   const pair = [insJ, insJ + 1];
   if (!pair.includes(idx)) {
-    feedback(`✗ Λάθος! Τώρα συγκρίνεις μόνο τα <strong>${arr[insJ]}</strong> και <strong>${arr[insJ+1]}</strong>. &nbsp;−5`, 'err');
-    addScore(-5); addError();
+    feedback(`✗ Λάθος! Τώρα συγκρίνεις μόνο τα ${n(arr[insJ])} και ${n(arr[insJ+1])}. &nbsp;−5`, 'err');
+    addScore(-5); addError(); soundWrong();
     renderBars(getInsertionHighlights({ wrong: [idx] }));
     setTimeout(() => { renderBars(getInsertionHighlights()); setInstruction(insertionInstruction()); }, 1000);
     return;
   }
 
-  feedback(`✓ Σωστή επιλογή. Σύγκριση: ${arr[insJ]} και ${arr[insJ+1]}. Τι πρέπει να γίνει; &nbsp;+5`, 'ok');
-  addScore(5); comparisons++;
+  feedback(`✓ Σωστή επιλογή. Σύγκριση: ${n(arr[insJ])} και ${n(arr[insJ+1])}. Τι πρέπει να γίνει; &nbsp;+5`, 'ok');
+  addScore(5); comparisons++; soundClick();
   phase = 'decide';
   renderBars(getInsertionHighlights());
-  setInstruction(`<strong>${arr[insJ]}</strong> vs <strong>${arr[insJ+1]}</strong> — αντιμετάθεση ή κράτηση;`);
+  setInstruction(`${n(arr[insJ])} vs ${n(arr[insJ+1])} — αντιμετάθεση ή κράτηση;`);
   showInsertionDecide();
 }
 
@@ -1603,8 +1725,8 @@ function showInsertionDecide() {
 
 function insHint() {
   const msg = arr[insJ] > arr[insJ+1]
-    ? `Υπόδειξη: ${arr[insJ]} > ${arr[insJ+1]} -> κάνε αντιμετάθεση`
-    : `Υπόδειξη: ${arr[insJ]} ≤ ${arr[insJ+1]} → κράτηση`;
+    ? `Υπόδειξη: ${n(arr[insJ])} &gt; ${n(arr[insJ+1])} → κάνε αντιμετάθεση`
+    : `Υπόδειξη: ${n(arr[insJ])} ≤ ${n(arr[insJ+1])} → κράτηση`;
   feedback(msg, 'info');
   addScore(-3);
 }
@@ -1616,8 +1738,8 @@ function insDecide(wantsSwap) {
 
   if (wantsSwap === shouldSwap) {
     if (shouldSwap) {
-      addScore(10); swaps++;
-      feedback(`✓ Σωστά! Το ${arr[insJ]} είναι μεγαλύτερο, άρα γίνεται αντιμετάθεση. &nbsp;+10`, 'ok');
+      addScore(10); swaps++; soundCorrect();
+      feedback(`✓ Σωστά! Το ${n(arr[insJ])} είναι μεγαλύτερο, άρα γίνεται αντιμετάθεση. &nbsp;+10`, 'ok');
       renderBars(getInsertionHighlights({ correct: [insJ, insJ+1] }));
       setTimeout(() => {
         [arr[insJ], arr[insJ+1]] = [arr[insJ+1], arr[insJ]];
@@ -1628,16 +1750,16 @@ function insDecide(wantsSwap) {
         else { refreshStats(); renderBars(getInsertionHighlights()); setInstruction(insertionInstruction()); }
       }, 500);
     } else {
-      addScore(10);
+      addScore(10); soundCorrect();
       feedback(`✓ Σωστά! Το στοιχείο βρήκε τη σωστή θέση του. &nbsp;+10`, 'ok');
       if (isSorted(arr)) { showVictory(); return; }
       phase = 'select';
       insNextPass();
     }
   } else {
-    addScore(-10); addError();
+    addScore(-10); addError(); soundWrong();
     feedback(shouldSwap
-      ? `✗ Λάθος! Το ${arr[insJ]} είναι μεγαλύτερο, άρα χρειάζεται αντιμετάθεση. &nbsp;−10`
+      ? `✗ Λάθος! Το ${n(arr[insJ])} είναι μεγαλύτερο, άρα χρειάζεται αντιμετάθεση. &nbsp;−10`
       : `✗ Λάθος! Το στοιχείο έχει ήδη βρει τη σωστή θέση του. &nbsp;−10`, 'err');
     renderBars(getInsertionHighlights({ wrong: [insJ, insJ+1] }));
     setTimeout(() => {
@@ -1681,6 +1803,7 @@ function showVictory() {
   qs('feedback').className = 'feedback';
   setInstruction('Η ταξινόμηση ολοκληρώθηκε.');
   renderBars({ correct: doneHighlight() });
+  soundVictory();
 
   const stars = errors === 0 ? 3 : errors <= 2 ? 2 : 1;
   levelStars[currentLevel] = Math.max(levelStars[currentLevel], stars);
